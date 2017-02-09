@@ -46,6 +46,13 @@ public class GameController : MonoBehaviour {
     private float m_CurrentTension = 0f;
     private float m_ChanceTimer = 0f;
 
+    void Awake()
+    {
+#if UNITY_STANDALONE
+        Cursor.visible = false;
+#endif
+    }
+
 	// Use this for initialization
 	void Start () {
         m_LockHolder = GameObject.FindGameObjectWithTag("Lock");
