@@ -51,6 +51,7 @@ public class TumblerPin : MonoBehaviour {
             {
                 m_IsInPosition = true;
                 _TopCylinder.GetComponent<Renderer>().material = _CorrectMat;
+                GameController.instance.PlayLock();
             }
             
         }
@@ -60,6 +61,7 @@ public class TumblerPin : MonoBehaviour {
             {
                 m_IsInPosition = false;
                 _TopCylinder.GetComponent<Renderer>().material = _WrongMat;
+                GameController.instance.PlayUnlock();
             }
         }
 	}
@@ -77,6 +79,7 @@ public class TumblerPin : MonoBehaviour {
         if (other.tag == "Player")
         {
             m_IsPicking = true;
+            GameController.instance.PlayPicking();
             if (transform.position.y < _Max_Y)
             {
                 transform.Translate(Vector3.up * _Up_Speed * Time.deltaTime);
@@ -97,5 +100,6 @@ public class TumblerPin : MonoBehaviour {
     {
         m_IsInPosition = false;
         _TopCylinder.GetComponent<Renderer>().material = _WrongMat;
+        GameController.instance.PlayUnlock();
     }
 }

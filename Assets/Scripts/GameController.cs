@@ -10,14 +10,20 @@ public enum Difficulty
 
 public class GameController : MonoBehaviour {
 
+    public static GameController instance;
+
     public Difficulty m_Difficulty;
 
     ///References:
     public Slider _TenstionSlider;
+    public AudioClip[] soundFXs;
+
     
     public GameObject _Pick;
     private GameObject m_LockHolder;
     private List<TumblerPin> m_Cylinders = new List<TumblerPin>();
+    private AudioSource m_Aud;
+
 
     /// <summary>
     /// Designed Variables
@@ -48,6 +54,15 @@ public class GameController : MonoBehaviour {
 
     void Awake()
     {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+        m_Aud = GetComponent<AudioSource>();
 #if UNITY_STANDALONE
         Cursor.visible = false;
 #endif
@@ -63,6 +78,7 @@ public class GameController : MonoBehaviour {
                 m_Cylinders.Add(child.GetComponent<TumblerPin>());
             }
         }
+        //TODO, add extra layer of difficulty.
         //float sliderSize = _TenstionSlider.GetComponent<RectTransform>().sizeDelta.y;
         //_TenstionSlider.transform.FindChild("break").GetComponent<RectTransform>().sizeDelta =  new Vector2(1f, -(sliderSize - (sliderSize / 10f * m_Diff_TensionRange[(int)m_Difficulty])));
         //_TenstionSlider.transform.FindChild("high").GetComponent<RectTransform>().sizeDelta =   new Vector2(1f, -(sliderSize - (sliderSize / 10f * m_Diff_TensionRange[(int)m_Difficulty])));
@@ -189,6 +205,7 @@ public class GameController : MonoBehaviour {
             return;
         }
         Debug.Log("Tools broke");
+        m_Aud.PlayOneShot(soundFXs[2]);
         m_IsGameOver = true;
     }
 
@@ -222,4 +239,29 @@ public class GameController : MonoBehaviour {
         m_IsGameOver = true;
         Debug.Log("GameOver");
     }
+    //This bottom section is bad
+    public void PlayLock()
+    {
+        m_Aud.PlayOneShot(soundFXs[1]);
+    }
+
+    public void PlayUnlock()
+    {
+        m_Aud.PlayOneShot(soundFXs[0]);
+    }
+
+    float soundfxDuration = 2.5f;
+    float soundfxTimer = 0;
+
+    public void PlayPicking()
+    {
+        if (Time.time > soundfxTimer)
+        {
+            soundfxTimer = Time.time + soundfxDuration;
+            m_Aud.PlayOneShot(soundFXs[2]);
+        }
+        
+    }
+
+
 }
