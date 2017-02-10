@@ -17,7 +17,9 @@ public class GameController : MonoBehaviour {
     ///References:
     public Slider _TenstionSlider;
     public AudioClip[] soundFXs;
-
+    public Image _UITimercenter;
+    public Image _UITimerFill;
+    public GameObject _UILives;
     
     public GameObject _Pick;
     private GameObject m_LockHolder;
@@ -44,16 +46,23 @@ public class GameController : MonoBehaviour {
     float m_HighChance = 5f;
     [SerializeField]
     float m_ChanceRate = 0.5f;
+    [SerializeField]
+    float m_BaseTime = 60f;
 
+    private float m_StartTime = 0f;
+    private float m_Timer = 0f;
     private float m_MouseInput = 0f;
     private bool m_Lifting = false;
     private float m_AppliedTension = 0f;
     private bool m_IsGameOver = false;
     private float m_CurrentTension = 0f;
     private float m_ChanceTimer = 0f;
+    private int m_Lives = 5;
 
     void Awake()
     {
+        breakageTimer = Time.time + timeBetweenBreakage;
+        m_BaseTime /= m_Diff_Tension[(int)m_Difficulty];
         if (instance == null)
         {
             instance = this;
@@ -70,6 +79,35 @@ public class GameController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+
+        switch (m_Difficulty)
+        {
+            case Difficulty.EASY:
+                m_Lives = 5;
+                break;
+            case Difficulty.NORMAL:
+                m_Lives = 3;
+                _UILives.transform.FindChild("4").gameObject.SetActive(false);
+                _UILives.transform.FindChild("5").gameObject.SetActive(false);
+                break;
+            case Difficulty.HARD:
+                m_Lives = 2;
+                _UILives.transform.FindChild("3").gameObject.SetActive(false);
+                _UILives.transform.FindChild("4").gameObject.SetActive(false);
+                _UILives.transform.FindChild("5").gameObject.SetActive(false);
+                break;
+            case Difficulty.IMPOSSIBLE:
+                m_Lives = 1;
+                _UILives.transform.FindChild("2").gameObject.SetActive(false);
+                _UILives.transform.FindChild("3").gameObject.SetActive(false);
+                _UILives.transform.FindChild("4").gameObject.SetActive(false);
+                _UILives.transform.FindChild("5").gameObject.SetActive(false);
+                break;
+        }
+
+        _UITimercenter.fillAmount = 0f;
+        m_StartTime = Time.time;
+        m_Timer = Time.time + m_BaseTime;
         m_LockHolder = GameObject.FindGameObjectWithTag("Lock");
         foreach (Transform child in m_LockHolder.transform)
         {
@@ -93,7 +131,9 @@ public class GameController : MonoBehaviour {
             return;
         }
         PlayerInput();
-        CheckGameOver();      
+        Timer();
+        CheckGameOver();
+       
 	}
 
     void FixedUpdate()
@@ -198,15 +238,24 @@ public class GameController : MonoBehaviour {
         }
     }
 
+    float timeBetweenBreakage = 5f;
+    float breakageTimer = 0f;
+
     void CheckToolBreakage(float chance)
     {
-        if (Random.Range(0f, 100f) > chance)
+        if (Random.Range(0f, 100f) > chance || Time.time < breakageTimer)
         {
             return;
         }
+        breakageTimer = Time.time + timeBetweenBreakage;
         Debug.Log("Tools broke");
         m_Aud.PlayOneShot(soundFXs[2]);
-        m_IsGameOver = true;
+        _UILives.transform.FindChild(m_Lives.ToString()).gameObject.SetActive(false);
+        if (--m_Lives <= 0)
+        {
+            m_IsGameOver = true;
+        }
+       
     }
 
     void CheckPinDown(float chance)
@@ -228,7 +277,11 @@ public class GameController : MonoBehaviour {
 
     void CheckGameOver()
     {
-        
+        if (Time.time > m_Timer)
+        {
+            m_IsGameOver = true;
+            return;
+        }
         foreach (TumblerPin tp in m_Cylinders)
         {
             if (!tp.m_IsInPosition)
@@ -239,6 +292,14 @@ public class GameController : MonoBehaviour {
         m_IsGameOver = true;
         Debug.Log("GameOver");
     }
+
+    void Timer()
+    {
+        _UITimerFill.fillAmount  += (1f/m_BaseTime) * Time.deltaTime;
+        _UITimercenter.color = Color.Lerp(Color.green, Color.red, _UITimerFill.fillAmount);
+        Debug.Log("Fill amount: " + _UITimercenter.fillAmount);
+    }
+
     //This bottom section is bad
     public void PlayLock()
     {
