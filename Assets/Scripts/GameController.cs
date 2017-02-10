@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public enum Difficulty
 {
@@ -20,7 +21,7 @@ public class GameController : MonoBehaviour {
     public Image _UITimercenter;
     public Image _UITimerFill;
     public GameObject _UILives;
-    
+
     public GameObject _Pick;
     private GameObject m_LockHolder;
     private List<TumblerPin> m_Cylinders = new List<TumblerPin>();
@@ -32,10 +33,10 @@ public class GameController : MonoBehaviour {
     /// </summary>
     //Easy, normal, hard, impossible values
     [SerializeField]
-    float[] m_Diff_TensionRange = new float[4]{ 8f, 4f, 2f, 1f };
+    float[] m_Diff_TensionRange = new float[4] { 8f, 4f, 2f, 1f };
     //Easy, normal, hard, impossible values
     [SerializeField]
-    float[] m_Diff_Tension = new float[4]{ 1f, 2f, 4f, 8f };
+    float[] m_Diff_Tension = new float[4] { 1f, 2f, 4f, 8f };
     [SerializeField]
     Vector4 m_Pick_Bounds = new Vector4();
     [SerializeField]
@@ -61,6 +62,7 @@ public class GameController : MonoBehaviour {
 
     void Awake()
     {
+        m_Difficulty = Data.instance.difficulty;
         breakageTimer = Time.time + timeBetweenBreakage;
         m_BaseTime /= m_Diff_Tension[(int)m_Difficulty];
         if (instance == null)
@@ -72,14 +74,14 @@ public class GameController : MonoBehaviour {
             Destroy(gameObject);
         }
         m_Aud = GetComponent<AudioSource>();
+
+    }
+
+    // Use this for initialization
+    void Start() {
 #if UNITY_STANDALONE
         Cursor.visible = false;
 #endif
-    }
-
-	// Use this for initialization
-	void Start () {
-
         switch (m_Difficulty)
         {
             case Difficulty.EASY:
@@ -123,9 +125,9 @@ public class GameController : MonoBehaviour {
         //_TenstionSlider.transform.FindChild("low").GetComponent<RectTransform>().sizeDelta =    new Vector2(1f, -(sliderSize - (sliderSize / 10f * m_Diff_TensionRange[(int)m_Difficulty])));
         //_TenstionSlider.transform.FindChild("none").GetComponent<RectTransform>().sizeDelta =   new Vector2(1f, -(sliderSize - (sliderSize / 10f * m_Diff_TensionRange[(int)m_Difficulty]))); 
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update() {
         if (m_IsGameOver)
         {
             return;
@@ -133,8 +135,8 @@ public class GameController : MonoBehaviour {
         PlayerInput();
         Timer();
         CheckGameOver();
-       
-	}
+
+    }
 
     void FixedUpdate()
     {
@@ -151,15 +153,15 @@ public class GameController : MonoBehaviour {
     {
         if (Input.GetKey(KeyCode.Space))
         {
-            m_AppliedTension = m_Diff_Tension[(int)m_Difficulty]/8f;
+            m_AppliedTension = m_Diff_Tension[(int)m_Difficulty] / 8f;
         }
         else
         {
-            m_AppliedTension = -m_Diff_Tension[(int)m_Difficulty]/8f;
+            m_AppliedTension = -m_Diff_Tension[(int)m_Difficulty] / 8f;
         }
         //Get mouse movement.
         m_MouseInput = Input.GetAxis("Mouse Y");
-       
+
         if (Input.GetMouseButton(0))
         {
             m_Lifting = true;
@@ -167,16 +169,16 @@ public class GameController : MonoBehaviour {
         else
         {
             m_Lifting = false;
-        }        
-       
+        }
+
 
     }
 
     void MovePick()
     {
-        _Pick.transform.Translate((m_Lifting?_Pick.transform.up * m_MouseInput : _Pick.transform.forward * -m_MouseInput)  * Time.deltaTime * m_Pick_MovementSpeed);
-        _Pick.transform.position = new Vector3( _Pick.transform.position.x,
-                                                Mathf.Clamp(_Pick.transform.position.y, m_Pick_Bounds.z, m_Pick_Bounds.w), 
+        _Pick.transform.Translate((m_Lifting ? _Pick.transform.up * m_MouseInput : _Pick.transform.forward * -m_MouseInput) * Time.deltaTime * m_Pick_MovementSpeed);
+        _Pick.transform.position = new Vector3(_Pick.transform.position.x,
+                                                Mathf.Clamp(_Pick.transform.position.y, m_Pick_Bounds.z, m_Pick_Bounds.w),
                                                 Mathf.Clamp(_Pick.transform.position.z, m_Pick_Bounds.x, m_Pick_Bounds.y));
     }
 
@@ -211,7 +213,7 @@ public class GameController : MonoBehaviour {
                 m_ChanceTimer = Time.time + m_ChanceRate;
                 CheckToolBreakage(m_LowChance * m_Diff_Tension[(int)m_Difficulty]);
             }
-            
+
         }
         else if (m_CurrentTension < 0.4f)
         {
@@ -231,7 +233,7 @@ public class GameController : MonoBehaviour {
                 CheckPinDown(m_HighChance * m_Diff_Tension[(int)m_Difficulty]);
             }
         }
-        else if(m_CurrentTension < 0.1f)
+        else if (m_CurrentTension < 0.1f)
         {
             //pins all go down
             CheckPinDown(100f);
@@ -253,9 +255,9 @@ public class GameController : MonoBehaviour {
         _UILives.transform.FindChild(m_Lives.ToString()).gameObject.SetActive(false);
         if (--m_Lives <= 0)
         {
-            m_IsGameOver = true;
+            GameOver();
         }
-       
+
     }
 
     void CheckPinDown(float chance)
@@ -270,16 +272,16 @@ public class GameController : MonoBehaviour {
                     Debug.Log("Pin out of position");
                 }
             }
-        } 
-        
-        
+        }
+
+
     }
 
     void CheckGameOver()
     {
         if (Time.time > m_Timer)
         {
-            m_IsGameOver = true;
+            GameOver();
             return;
         }
         foreach (TumblerPin tp in m_Cylinders)
@@ -289,13 +291,13 @@ public class GameController : MonoBehaviour {
                 return;
             }
         }
-        m_IsGameOver = true;
+        GameOver();
         Debug.Log("GameOver");
     }
 
     void Timer()
     {
-        _UITimerFill.fillAmount  += (1f/m_BaseTime) * Time.deltaTime;
+        _UITimerFill.fillAmount += (1f / m_BaseTime) * Time.deltaTime;
         _UITimercenter.color = Color.Lerp(Color.green, Color.red, _UITimerFill.fillAmount);
         Debug.Log("Fill amount: " + _UITimercenter.fillAmount);
     }
@@ -321,7 +323,19 @@ public class GameController : MonoBehaviour {
             soundfxTimer = Time.time + soundfxDuration;
             m_Aud.PlayOneShot(soundFXs[2]);
         }
-        
+
+    }
+
+    public void GameOver()
+    {
+        m_IsGameOver = true;
+        StartCoroutine(DelayToMenu());
+    }
+
+    IEnumerator DelayToMenu()
+    {
+        yield return new WaitForSeconds(3f);
+        SceneManager.LoadScene(0);
     }
 
 
