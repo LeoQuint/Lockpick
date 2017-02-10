@@ -1,0 +1,17 @@
+Tumble Pin Lock:
+
+
+This lockpicking minigame simulates an ordinary 5 pin tumble lock.
+
+-Move the move forward/back to move the lockpicking pick.
+-Hold the left mouse button AND move forward/back to raise/lower the pick.
+-Use the pick to raise the pins gently into position. (they will turn green when locked in place)
+
+-Space is used to apply pressure with the torsion wrench to the lock.
+	-The Bar on the right represents the amount of force applied to the lock.
+	-Green is optimal(nothing bad will happen)
+	-Too little force and the pins may fall out of position.
+	-Too much force and your torsion wrench may break. 
+
+-You have only a limited supply of wrenchs (lives).
+-A Timer shows the time remaining near the bottom right.
